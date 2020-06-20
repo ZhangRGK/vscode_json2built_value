@@ -1,0 +1,108 @@
+import * as vscode from "vscode";
+import * as path from "path";
+import { TextDecoder } from "util";
+import {
+  appendStringProperty,
+  appendNumberProperty,
+  appendArrayProperty,
+  appendObjectProperty,
+} from "./formatter";
+import { convertFileName, composeFile, writeFile } from "./utils";
+
+export interface IGeneratedFile {
+  name: string;
+  properties: string[];
+  refers: string[];
+}
+
+export class Parser {
+  private uri: vscode.Uri;
+  private json?: any;
+  private files: IGeneratedFile[] = [];
+
+  private constructor(uri: vscode.Uri, json: any) {
+    this.uri = uri;
+    this.json = json;
+  }
+
+  static load(uri: vscode.Uri): Promise<Parser> {
+    return new Promise((resolve, reject) => {
+      vscode.workspace.fs.readFile(uri).then((content: Uint8Array) => {
+        let jsonString;
+        try {
+          jsonString = new TextDecoder("utf-8").decode(content);
+        } catch (e) {
+          return reject("read file error");
+        }
+        try {
+          const json = JSON.parse(jsonString);
+          resolve(new Parser(uri, json));
+        } catch (e) {
+          return reject("parse json error");
+        }
+      });
+    });
+  }
+
+  getProperties(json: any) {
+    const properties: string[] = [];
+    const refers: string[] = [];
+    for (let key in json) {
+      const value = json[key];
+      const type = typeof value;
+      let property: string = "";
+      let refer: string | null = null;
+      if (value === null) {
+      } else if (type === "string") {
+        [property, refer] = appendStringProperty(key);
+      } else if (type === "number") {
+        [property, refer] = appendNumberProperty(key, value);
+      } else if (type === "object" && Array.isArray(value)) {
+        [property, refer] = appendArrayProperty(key, value, this.files);
+      } else if (type === "object") {
+        [property, refer] = appendObjectProperty(key, value);
+      }
+      if (property !== "") {
+        properties.push(property);
+      }
+      if (refer != null) {
+        refers.push(refer);
+        this.parse(refer, Array.isArray(value) ? value[0] : value);
+      }
+    }
+    return [properties, refers];
+  }
+
+  parse(fileName?: string, json?: any) {
+    let data = json;
+    if (!data && !this.json) {
+      return;
+    } else if (!data) {
+      data = this.json;
+    }
+    let name = fileName;
+    if (!name) {
+      name = this.uri.fsPath.replace(/(.*\/)*([^.]+).*/gi, "$2");
+    }
+    const [properties, refers] = this.getProperties(data);
+    this.files.push({
+      name: convertFileName(name),
+      properties,
+      refers,
+    });
+  }
+
+  async write() {
+    return Promise.all(
+      this.files.map((file) => {
+        const fileContent = composeFile(file);
+        return writeFile(
+          this.uri.with({
+            path: path.resolve(this.uri.fsPath, `../${file.name}.dart`),
+          }),
+          fileContent
+        );
+      })
+    );
+  }
+}
