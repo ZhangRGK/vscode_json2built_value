@@ -2,6 +2,7 @@
   "name": "json2built-value",
   "displayName": "json2built_value",
   "description": "parse json to built_value class",
+  "publisher": "ZhangRGK",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.46.0"
