@@ -4,6 +4,12 @@ export class FileLoadError extends Error {
   }
 }
 
+export class ResponseTypeError extends Error {
+  constructor() {
+    super("Error: response content type error");
+  }
+}
+
 export class ParseError extends Error {
   constructor() {
     super("Error: parse json error");

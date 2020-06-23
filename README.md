@@ -10,6 +10,4 @@ This extension allow you to generate built value class file by selecting a json 
 
 ## Todo
 
-- Add testing
-- Load json from url
 - Support right click menu

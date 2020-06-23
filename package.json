@@ -19,6 +19,10 @@
       {
         "command": "json2built-value.fromFile",
         "title": "JSON 2 BuiltValue: From file"
+      },
+      {
+        "command": "json2built-value.fromUrl",
+        "title": "JSON 2 BuiltValue: From URL"
       }
     ]
   },
@@ -45,6 +49,7 @@
     "vscode-test": "^1.3.0"
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "inflected": "^2.0.4"
   }
 }

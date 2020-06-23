@@ -2,44 +2,69 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { Parser } from "./libs/parser";
+import { statSync } from "fs";
+import { checkUrlValid } from "./libs/utils";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log(
-    'Congratulations, your extension "json2built-value" is now active!'
-  );
-
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  let disposable = vscode.commands.registerCommand(
+  let disposableFromFile = vscode.commands.registerCommand(
     "json2built-value.fromFile",
-    () => {
-      // The code you place here will be executed every time your command is executed
-      vscode.window
-        .showOpenDialog({
-          openLabel: "Open a JSON file",
-          canSelectMany: false,
-        })
-        .then(async (fileUri?: vscode.Uri[]) => {
-          if (fileUri && fileUri[0]) {
-            const path = fileUri[0];
-            const parser = await Parser.load(path);
-            vscode.window.showInformationMessage(`Loading file: ${fileUri[0]}`);
-            parser.parse();
-            vscode.window.showInformationMessage(`Writing files`);
-            await parser.write();
-          }
-          // Display a message box to the user
-        });
-    }
+    fromFile
+  );
+  let disposableFromUrl = vscode.commands.registerCommand(
+    "json2built-value.fromUrl",
+    fromUrl
   );
 
-  context.subscriptions.push(disposable);
+  context.subscriptions.push(disposableFromFile);
+  context.subscriptions.push(disposableFromUrl);
 }
+
+const fromFile = async () => {
+  // The code you place here will be executed every time your command is executed
+  const fileUri = await vscode.window.showOpenDialog({
+    openLabel: "Open a JSON file",
+    canSelectMany: false,
+  });
+  if (fileUri && fileUri[0]) {
+    const path = fileUri[0];
+    const parser = await Parser.loadUri(path);
+    await writeFiles(parser);
+  }
+};
+
+const fromUrl = async () => {
+  const url = await vscode.window.showInputBox({
+    prompt: "Please enter an http(or https) url",
+    ignoreFocusOut: true,
+    placeHolder: "https://example.com",
+    validateInput: (value) =>
+      !checkUrlValid(value) ? "Url must start with http or https." : "",
+  });
+  const fileUri = await vscode.window.showOpenDialog({
+    openLabel: "Select a folder",
+    canSelectMany: false,
+    canSelectFolders: true,
+  });
+  if (
+    url &&
+    fileUri &&
+    fileUri[0] &&
+    statSync(fileUri[0].fsPath).isDirectory()
+  ) {
+    const path = fileUri[0];
+    const parser = await Parser.loadUrl(url, path);
+    await writeFiles(parser);
+  }
+};
+
+const writeFiles = async (parser: Parser) => {
+  parser.parse();
+  vscode.window.showInformationMessage(`Generating files`);
+  await parser.write();
+  vscode.window.showInformationMessage(`Done`);
+};
 
 // this method is called when your extension is deactivated
 export function deactivate() {}

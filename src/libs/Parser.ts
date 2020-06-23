@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import axios from "axios";
 import { TextDecoder } from "util";
 import {
   appendStringProperty,
@@ -8,6 +9,7 @@ import {
   appendObjectProperty,
 } from "./formatter";
 import { convertFileName, composeFile, writeFile } from "./utils";
+import { ResponseTypeError } from "./errors";
 
 export interface IGeneratedFile {
   name: string;
@@ -25,7 +27,7 @@ export class Parser {
     this.json = json;
   }
 
-  static load(uri: vscode.Uri): Promise<Parser> {
+  static loadUri(uri: vscode.Uri): Promise<Parser> {
     return new Promise((resolve, reject) => {
       vscode.workspace.fs.readFile(uri).then((content: Uint8Array) => {
         let jsonString;
@@ -42,6 +44,15 @@ export class Parser {
         }
       });
     });
+  }
+
+  static async loadUrl(url: string, uri: vscode.Uri): Promise<Parser> {
+    const response = await axios.get(url);
+
+    if (response.headers["content-type"] !== "application/json") {
+      throw new ResponseTypeError();
+    }
+    return new Parser(uri, response.data);
   }
 
   getProperties(json: any) {

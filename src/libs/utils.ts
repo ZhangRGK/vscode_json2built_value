@@ -75,3 +75,5 @@ export const convertFileName = (
   }
   return fileName;
 };
+
+export const checkUrlValid = (url: string) => /^http(s)?:\/\//gi.test(url);
