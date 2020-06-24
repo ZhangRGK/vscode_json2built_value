@@ -2,8 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { Parser } from "./libs/parser";
-import { statSync } from "fs";
-import { checkUrlValid } from "./libs/utils";
+import { checkUrlValid, isDirectory } from "./libs/utils";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -42,17 +41,15 @@ const fromUrl = async () => {
     validateInput: (value) =>
       !checkUrlValid(value) ? "Url must start with http or https." : "",
   });
+  if (!url || url === "") {
+    return;
+  }
   const fileUri = await vscode.window.showOpenDialog({
     openLabel: "Select a folder",
     canSelectMany: false,
     canSelectFolders: true,
   });
-  if (
-    url &&
-    fileUri &&
-    fileUri[0] &&
-    statSync(fileUri[0].fsPath).isDirectory()
-  ) {
+  if (url && fileUri && fileUri[0] && isDirectory(fileUri[0])) {
     const path = fileUri[0];
     const parser = await Parser.loadUrl(url, path);
     await writeFiles(parser);

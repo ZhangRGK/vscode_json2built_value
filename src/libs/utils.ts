@@ -2,6 +2,7 @@ import { IGeneratedFile } from "./parser";
 import * as inflected from "inflected";
 import * as vscode from "vscode";
 import { TextEncoder } from "util";
+import { statSync } from "fs";
 
 export const composeFile = (file: IGeneratedFile) => {
   const className = inflected.camelize(file.name);
@@ -77,3 +78,6 @@ export const convertFileName = (
 };
 
 export const checkUrlValid = (url: string) => /^http(s)?:\/\//gi.test(url);
+
+export const isDirectory = (uri: vscode.Uri) =>
+  statSync(uri.fsPath).isDirectory();

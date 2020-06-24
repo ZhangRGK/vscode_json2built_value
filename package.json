@@ -11,7 +11,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:json2built-value.fromFile"
+    "onCommand:json2built-value.fromFile",
+    "onCommand:json2built-value.fromUrl"
   ],
   "main": "./out/extension.js",
   "contributes": {

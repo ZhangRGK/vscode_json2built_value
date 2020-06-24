@@ -8,7 +8,7 @@ import {
   appendArrayProperty,
   appendObjectProperty,
 } from "./formatter";
-import { convertFileName, composeFile, writeFile } from "./utils";
+import { convertFileName, composeFile, writeFile, isDirectory } from "./utils";
 import { ResponseTypeError } from "./errors";
 
 export interface IGeneratedFile {
@@ -19,7 +19,7 @@ export interface IGeneratedFile {
 
 export class Parser {
   private uri: vscode.Uri;
-  private json?: any;
+  private json: any;
   private files: IGeneratedFile[] = [];
 
   private constructor(uri: vscode.Uri, json: any) {
@@ -48,10 +48,12 @@ export class Parser {
 
   static async loadUrl(url: string, uri: vscode.Uri): Promise<Parser> {
     const response = await axios.get(url);
-
-    if (response.headers["content-type"] !== "application/json") {
+    if (
+      !(response.headers["content-type"] as string).includes("application/json")
+    ) {
       throw new ResponseTypeError();
     }
+
     return new Parser(uri, response.data);
   }
 
@@ -93,7 +95,9 @@ export class Parser {
     }
     let name = fileName;
     if (!name) {
-      name = this.uri.fsPath.replace(/(.*\/)*([^.]+).*/gi, "$2");
+      name = isDirectory(this.uri)
+        ? "response"
+        : this.uri.fsPath.replace(/(.*\/)*([^.]+).*/gi, "$2");
     }
     const [properties, refers] = this.getProperties(data);
     this.files.push({
@@ -109,7 +113,10 @@ export class Parser {
         const fileContent = composeFile(file);
         return writeFile(
           this.uri.with({
-            path: path.resolve(this.uri.fsPath, `../${file.name}.dart`),
+            path: path.resolve(
+              this.uri.fsPath,
+              `${isDirectory(this.uri) ? "." : ".."}/${file.name}.dart`
+            ),
           }),
           fileContent
         );
