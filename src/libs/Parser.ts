@@ -9,7 +9,7 @@ import {
   appendObjectProperty,
 } from "./formatter";
 import { convertFileName, composeFile, writeFile, isDirectory } from "./utils";
-import { ResponseTypeError } from "./errors";
+import { ResponseTypeError, FileLoadError, ParseJSONError } from "./errors";
 
 export interface IGeneratedFile {
   name: string;
@@ -27,23 +27,20 @@ export class Parser {
     this.json = json;
   }
 
-  static loadUri(uri: vscode.Uri): Promise<Parser> {
-    return new Promise((resolve, reject) => {
-      vscode.workspace.fs.readFile(uri).then((content: Uint8Array) => {
-        let jsonString;
-        try {
-          jsonString = new TextDecoder("utf-8").decode(content);
-        } catch (e) {
-          return reject("read file error");
-        }
-        try {
-          const json = JSON.parse(jsonString);
-          resolve(new Parser(uri, json));
-        } catch (e) {
-          return reject("parse json error");
-        }
-      });
-    });
+  static async loadUri(uri: vscode.Uri): Promise<Parser> {
+    const content: Uint8Array = await vscode.workspace.fs.readFile(uri);
+    let jsonString;
+    try {
+      jsonString = new TextDecoder("utf-8").decode(content);
+    } catch (e) {
+      throw new FileLoadError();
+    }
+    try {
+      const json = JSON.parse(jsonString);
+      return new Parser(uri, json);
+    } catch (e) {
+      throw new ParseJSONError();
+    }
   }
 
   static async loadUrl(url: string, uri: vscode.Uri): Promise<Parser> {
@@ -51,7 +48,7 @@ export class Parser {
     if (
       !(response.headers["content-type"] as string).includes("application/json")
     ) {
-      throw new ResponseTypeError();
+      throw new ResponseTypeError(url);
     }
 
     return new Parser(uri, response.data);

@@ -1,23 +1,25 @@
 export class FileLoadError extends Error {
   constructor() {
-    super("Error: load file error");
+    super("Can't load file.");
   }
 }
 
 export class ResponseTypeError extends Error {
-  constructor() {
-    super("Error: response content type error");
+  constructor(url: string) {
+    super(`Can't get json response from url: ${url}.`);
   }
 }
 
-export class ParseError extends Error {
+export class ParseJSONError extends Error {
   constructor() {
-    super("Error: parse json error");
+    super(
+      `Something went wrong while parsing JSON, please check the JSON content.`
+    );
   }
 }
 
 export class ParseArrayError extends Error {
   constructor() {
-    super("Error: array can only have single type");
+    super("Array can only have single type element");
   }
 }

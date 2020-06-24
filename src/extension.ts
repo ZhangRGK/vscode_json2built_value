@@ -3,6 +3,7 @@
 import * as vscode from "vscode";
 import { Parser } from "./libs/parser";
 import { checkUrlValid, isDirectory } from "./libs/utils";
+import { FileLoadError } from "./libs/errors";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -21,38 +22,45 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 const fromFile = async () => {
-  // The code you place here will be executed every time your command is executed
-  const fileUri = await vscode.window.showOpenDialog({
-    openLabel: "Open a JSON file",
-    canSelectMany: false,
-  });
-  if (fileUri && fileUri[0]) {
-    const path = fileUri[0];
-    const parser = await Parser.loadUri(path);
-    await writeFiles(parser);
+  try {
+    const fileUri = await vscode.window.showOpenDialog({
+      openLabel: "Open a JSON file",
+      canSelectMany: false,
+    });
+    if (fileUri && fileUri[0]) {
+      const path = fileUri[0];
+      const parser = await Parser.loadUri(path);
+      await writeFiles(parser);
+    }
+  } catch (e) {
+    vscode.window.showErrorMessage(e.message);
   }
 };
 
 const fromUrl = async () => {
-  const url = await vscode.window.showInputBox({
-    prompt: "Please enter an http(or https) url",
-    ignoreFocusOut: true,
-    placeHolder: "https://example.com",
-    validateInput: (value) =>
-      !checkUrlValid(value) ? "Url must start with http or https." : "",
-  });
-  if (!url || url === "") {
-    return;
-  }
-  const fileUri = await vscode.window.showOpenDialog({
-    openLabel: "Select a folder",
-    canSelectMany: false,
-    canSelectFolders: true,
-  });
-  if (url && fileUri && fileUri[0] && isDirectory(fileUri[0])) {
-    const path = fileUri[0];
-    const parser = await Parser.loadUrl(url, path);
-    await writeFiles(parser);
+  try {
+    const url = await vscode.window.showInputBox({
+      prompt: "Please enter an http(or https) url",
+      ignoreFocusOut: true,
+      placeHolder: "https://example.com",
+      validateInput: (value) =>
+        !checkUrlValid(value) ? "Url must start with http or https." : "",
+    });
+    if (!url || url === "") {
+      return;
+    }
+    const fileUri = await vscode.window.showOpenDialog({
+      openLabel: "Select a folder",
+      canSelectMany: false,
+      canSelectFolders: true,
+    });
+    if (url && fileUri && fileUri[0] && isDirectory(fileUri[0])) {
+      const path = fileUri[0];
+      const parser = await Parser.loadUrl(url, path);
+      await writeFiles(parser);
+    }
+  } catch (e) {
+    vscode.window.showErrorMessage(e.message);
   }
 };
 
