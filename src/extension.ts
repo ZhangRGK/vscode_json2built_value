@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { Parser } from "./libs/parser";
 import { checkUrlValid, isDirectory } from "./libs/utils";
 import { FileLoadError } from "./libs/errors";
+import { resolve } from "path";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -49,6 +50,15 @@ const fromUrl = async () => {
     if (!url || url === "") {
       return;
     }
+    const fileName = await vscode.window.showInputBox({
+      prompt: "Please enter the root file name",
+      ignoreFocusOut: true,
+      placeHolder: "response",
+    });
+    if (!fileName || fileName === "") {
+      return;
+    }
+
     const fileUri = await vscode.window.showOpenDialog({
       openLabel: "Select a folder",
       canSelectMany: false,
@@ -56,7 +66,12 @@ const fromUrl = async () => {
     });
     if (url && fileUri && fileUri[0] && isDirectory(fileUri[0])) {
       const path = fileUri[0];
-      const parser = await Parser.loadUrl(url, path);
+      const parser = await Parser.loadUrl(
+        url,
+        path.with({
+          path: resolve(fileUri[0].fsPath, `./${fileName}.dart`),
+        })
+      );
       await writeFiles(parser);
     }
   } catch (e) {

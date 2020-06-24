@@ -92,9 +92,7 @@ export class Parser {
     }
     let name = fileName;
     if (!name) {
-      name = isDirectory(this.uri)
-        ? "response"
-        : this.uri.fsPath.replace(/(.*\/)*([^.]+).*/gi, "$2");
+      name = this.uri.fsPath.replace(/(.*\/)*([^.]+).*/gi, "$2");
     }
     const [properties, refers] = this.getProperties(data);
     this.files.push({
@@ -110,10 +108,7 @@ export class Parser {
         const fileContent = composeFile(file);
         return writeFile(
           this.uri.with({
-            path: path.resolve(
-              this.uri.fsPath,
-              `${isDirectory(this.uri) ? "." : ".."}/${file.name}.dart`
-            ),
+            path: path.resolve(this.uri.fsPath, `../${file.name}.dart`),
           }),
           fileContent
         );
