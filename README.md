@@ -6,13 +6,17 @@ Auto generate built value class files by given json structure.
 
 ### Generate from file
 
-Select the `JSON 2 BuiltValue: From file` command, then select a json file:
+Select the `JSON2BuiltValue: Generate from file` command, then select a json file:
 
 ![fromFile](./assets/fromFile.gif)
 
+### Select file in explorer
+
+Right click a json file then select the `Generate from file`.
+
 ### Generate from Url
 
-- Select the `JSON 2 BuiltValue: From Url` command
+- Select the `JSON2BuiltValue: Generate from Url` command
 - Enter the root dart file name
 - Select a folder to place the generated files
 
@@ -20,4 +24,4 @@ Select the `JSON 2 BuiltValue: From file` command, then select a json file:
 
 ## Todo
 
-- Support right click menu
+- Generate the `serializers.dart`

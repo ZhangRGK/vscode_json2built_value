@@ -22,12 +22,14 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposableFromUrl);
 }
 
-const fromFile = async () => {
+const fromFile = async (uri: vscode.Uri) => {
   try {
-    const fileUri = await vscode.window.showOpenDialog({
-      openLabel: "Open a JSON file",
-      canSelectMany: false,
-    });
+    const fileUri = uri
+      ? [uri]
+      : await vscode.window.showOpenDialog({
+          openLabel: "Open a JSON file",
+          canSelectMany: false,
+        });
     if (fileUri && fileUri[0]) {
       const path = fileUri[0];
       const parser = await Parser.loadUri(path);

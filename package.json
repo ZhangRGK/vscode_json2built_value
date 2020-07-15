@@ -3,7 +3,11 @@
   "displayName": "json2built_value",
   "description": "parse json to built_value class",
   "publisher": "ZhangRGK",
-  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZhangRGK/vscode_json2built_value"
+  },
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.46.0"
   },
@@ -19,13 +23,24 @@
     "commands": [
       {
         "command": "json2built-value.fromFile",
-        "title": "JSON 2 BuiltValue: From file"
+        "title": "Generate from file",
+        "category": "JSON2BuiltValue"
       },
       {
         "command": "json2built-value.fromUrl",
-        "title": "JSON 2 BuiltValue: From URL"
+        "title": "Generate from URL",
+        "category": "JSON2BuiltValue"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceLangId == json",
+          "command": "json2built-value.fromFile",
+          "group": "json2built-value"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run compile",
